@@ -2,16 +2,27 @@ const express = require("express");
 const router = express.Router();
 
 const Person = require("./../models/Person");
+const { jwtMiddleware, generateToken } = require("./../jwt");
 
-router.post("/", async (req, res) => {
+router.post("/signup", async (req, res) => {
   try {
     const data = req.body;
 
     const newPerson = new Person(data);
     const response = await newPerson.save();
-    res.status(200).json(response);
+
+    // Generating JWT token using userdata payload
+
+    const payload = {
+      id: response.id,
+    };
+
+    const token = generateToken(payload);
+
+    console.log("Token : ", token);
+    res.status(200).json({ user: response, token: token });
   } catch (err) {
-    console.log("Error");
+    console.log(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
