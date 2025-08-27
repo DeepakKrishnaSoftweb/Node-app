@@ -31,6 +31,9 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
+  profilePhoto: {
+    type: String,
+  },
 });
 
 employeeSchema.pre("save", async function (next) {

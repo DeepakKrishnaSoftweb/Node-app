@@ -1,12 +1,41 @@
 const express = require("express");
+const multer = require("multer");
 
 const router = express.Router();
 const Employee = require("../models/employee");
 const { jwtMiddleware, generateJwtToken } = require("../employeeJwt");
 
-router.post("/signup", async (req, res) => {
+///Setup multer to store files in upload folder
+/*const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const suffix = Date.now();
+
+    cb(null, suffix + "-" + req.originalname);
+  },
+});
+
+const upload = multer({storage: storage});
+
+*/
+
+// Image upload using base64
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+/// Create Employee
+router.post("/signup", upload.single("photo"), async (req, res) => {
   try {
     const data = req.body;
+
+    if (req.file) {
+      /// Using multer image upload in file
+      /* data.profilePhoto = req.file ? req.file.path : null; */
+
+      data.profilePhoto = req.file ? req.file.buffer.toString("base64") : null;
+    }
     const newEmployee = Employee(data);
 
     const response = await newEmployee.save();
@@ -20,10 +49,16 @@ router.post("/signup", async (req, res) => {
     res.status(200).json({ success: true, user: response, token: token });
   } catch (err) {
     console.log("Error", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    // Handle Mongoose unique error
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Email already exists" });
+    } else {
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
   }
 });
 
+// Employee Login
 router.post("/signIn", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -45,6 +80,7 @@ router.post("/signIn", async (req, res) => {
   }
 });
 
+/// Employee Profile
 router.get("/profile", jwtMiddleware, async (req, res) => {
   try {
     const employeeData = req.user;
@@ -57,6 +93,7 @@ router.get("/profile", jwtMiddleware, async (req, res) => {
   }
 });
 
+/// Get all employees
 router.get("/", async (req, res) => {
   try {
     const response = await Employee.find();
@@ -68,10 +105,15 @@ router.get("/", async (req, res) => {
   }
 });
 
+/// Get employee data by id
 router.get("/:id", async (req, res) => {
   try {
     const employeeId = req.params.id;
     const response = await Employee.findById(employeeId);
+
+    if (!response) {
+      return res.status(404).json({ success: false, message: "No data found" });
+    }
     res.status(200).json({ success: true, employee: response });
   } catch (err) {
     console.log("Error : ", err);
@@ -79,6 +121,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+/// Update employee data
 router.put("/update", jwtMiddleware, async (req, res) => {
   try {
     const employeeData = req.user;
@@ -98,19 +141,23 @@ router.put("/update", jwtMiddleware, async (req, res) => {
       res.status(404).json({ error: "Employee Not Found" });
     }
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Employee Data Updated Successfully",
-        user: response,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Employee Data Updated Successfully",
+      user: response,
+    });
   } catch (err) {
     console.log("Error : ", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    // Handle Mongoose unique error
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Email already exists" });
+    } else {
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
   }
 });
 
+/// Delete employee data
 router.delete("/delete", jwtMiddleware, async (req, res) => {
   try {
     const employeeData = req.user;
