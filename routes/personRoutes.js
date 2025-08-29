@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const Person = require("./../models/Person");
-const { jwtMiddleware, generateToken } = require("./../jwt");
+const {
+  jwtMiddleware,
+  generateToken,
+} = require("../middlewares/employeeJwtMiddleware");
 
 router.post("/signup", async (req, res) => {
   try {

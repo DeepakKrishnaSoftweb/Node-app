@@ -1,9 +1,18 @@
+/// Define express server
 const express = require("express");
+/// Define multer (for upload files)
 const multer = require("multer");
-
+/// Initialize router using express
 const router = express.Router();
+
+/// Import Employee model
 const Employee = require("../models/employee");
-const { jwtMiddleware, generateJwtToken } = require("../employeeJwt");
+
+/// Import Employee JWT
+const {
+  jwtMiddleware,
+  generateJwtToken,
+} = require("../middlewares/employeeJwtMiddleware");
 
 ///Setup multer to store files in upload folder
 /*const storage = multer.diskStorage({
@@ -37,7 +46,6 @@ router.post("/signup", upload.single("photo"), async (req, res) => {
       data.profilePhoto = req.file ? req.file.buffer.toString("base64") : null;
     }
     const newEmployee = Employee(data);
-
     const response = await newEmployee.save();
 
     const payload = {

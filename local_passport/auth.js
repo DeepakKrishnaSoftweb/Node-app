@@ -1,6 +1,6 @@
 const passport = require("passport");
 const localStrategy = require("passport-local").Strategy;
-const Person = require("./models/Person");
+const Person = require("../models/Person");
 
 /// Create Authentication
 passport.use(
