@@ -1,6 +1,9 @@
 // Define Mysql package
 const mysql = require("mysql2/promise");
 
+// Define Dotenv package
+const env = require("dotenv");
+
 // Setup mysql Connections
 const mySqlPool = mysql.createPool({
   host: "localhost",

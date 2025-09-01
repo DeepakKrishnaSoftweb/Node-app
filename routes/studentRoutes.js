@@ -134,12 +134,14 @@ router.post("/signin", async (req, res) => {
     /// Fetching student data from request body
     const { username, password } = req.body;
 
+    /// Checking the request body which have username and password empty or not
     if (!username || !password) {
       return res
         .status(400)
         .json({ success: false, error: "Username and password required" });
     }
 
+    /// Query to check request username is available or not in Students table
     const [students] = await mysqlDb.query(
       "SELECT * FROM Students WHERE username =?",
       [username]
@@ -151,11 +153,14 @@ router.post("/signin", async (req, res) => {
         .json({ success: false, error: "Invalid username or password" });
     }
 
+    /// Student data of requested student
     const student = students[0];
 
+    /// JWT token payload
     const paylod = {
       id: student.id,
     };
+    /// Generate jwt token
     const token = await generateJwtToken(paylod);
 
     res.status(200).json({
