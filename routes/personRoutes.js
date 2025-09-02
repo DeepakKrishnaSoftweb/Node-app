@@ -5,7 +5,7 @@ const Person = require("./../models/Person");
 const {
   jwtMiddleware,
   generateToken,
-} = require("../middlewares/employeeJwtMiddleware");
+} = require("../middlewares/jwtMiddleware");
 
 router.post("/signup", async (req, res) => {
   try {

@@ -12,7 +12,7 @@ const Employee = require("../models/employee");
 const {
   jwtMiddleware,
   generateJwtToken,
-} = require("../middlewares/employeeJwtMiddleware");
+} = require("../middlewares/jwtMiddleware");
 
 ///Setup multer to store files in upload folder
 /*const storage = multer.diskStorage({

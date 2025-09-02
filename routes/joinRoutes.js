@@ -1,8 +1,9 @@
-// const express = require("express");
-// const { createFrontEnd } = require("../controllers/joinController");
+const express = require("express");
 
-// const router = express.Router();
+const router = express.Router();
 
-// router.post("/createFrontEnd", createFrontEnd);
+const { getDropDown } = require("./../controllers/joinController");
 
-// module.exports = router;
+router.get("/getDropDown", getDropDown);
+
+module.exports = router;

@@ -3,6 +3,9 @@ const express = require("express");
 /// Import Passport for local strategy
 const passport = require("./local_passport/auth.js");
 
+const pino = require("pino");
+const logger = pino();
+
 /// Define MongoDb Database
 //const mongoDb = require("./db/mongo-db.js");
 
@@ -31,6 +34,7 @@ const studentRoutes = require("./routes/studentRoutes");
 const frontEndRoutes = require("./routes/frontendRoutes");
 const backEndRoutes = require("./routes/backendRoutes");
 const dataTypeRoutes = require("./routes/datatypeRoutes");
+const joinRoutes = require("./routes/joinRoutes");
 
 // Calling routers
 app.use("/person", personRoutes);
@@ -40,6 +44,7 @@ app.use("/student", studentRoutes);
 app.use("/frontend", frontEndRoutes);
 app.use("/backend", backEndRoutes);
 app.use("/dataType", dataTypeRoutes);
+app.use("/", joinRoutes);
 
 const PORT = process.env.PORT || 3000;
 
@@ -55,9 +60,11 @@ const PORT = process.env.PORT || 3000;
 sequelize
   .sync({ force: false }) // force: true will DROP and recreate table
   .then(() => {
-    console.log("Database synced");
-    app.listen(3000, () => {
-      console.log("Listening to port number 3000");
+    //console.log("Database synced");
+    logger.info("Database synced");
+    app.listen(PORT, () => {
+      // console.log("Listening to port number 3000");
+      logger.info("Listening to port number 3000");
     });
   })
-  .catch((err) => console.error("DB connection failed:", err));
+  .catch((err) => logger.error("DB connection failed:", err));

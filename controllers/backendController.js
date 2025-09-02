@@ -33,6 +33,7 @@ const createBackend = async (req, res) => {
   }
 };
 
+/// SignIn
 const signInWithJWT = async (req, res) => {
   try {
     /// Fetching student data from request body
@@ -48,11 +49,12 @@ const signInWithJWT = async (req, res) => {
     /// Query to check request username is available or not in Students table
     const user = await BackEnd.findOne({ where: { username: username } });
 
-    if (!user) {
+    /// Comparing request password and added password
+    const isMatch = await user.validPassword(password);
+    if (!user || !isMatch)
       return res
         .status(401)
         .json({ success: false, error: "Invalid username or password" });
-    }
 
     /// JWT token payload
     const paylod = {
@@ -69,6 +71,40 @@ const signInWithJWT = async (req, res) => {
     });
   } catch (err) {
     console.log("Error", err);
+    /// 500 Internal Server Error → Something broke on the server.
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
+/// Change Password
+const changePassword = async (req, res) => {
+  try {
+    /// Fetching backend id from JWT token
+    const backendId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    /// Checking backend is available or not
+    const user = await BackEnd.findByPk(backendId);
+
+    /// Comparing request password and added password
+    const isMatch = await user.validPassword(oldPassword);
+    if (!user || !isMatch)
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid old password" });
+
+    // Just assign new password (hook will hash it automatically)
+    user.password = newPassword;
+
+    await user.save(); // beforeUpdate hook triggers here
+
+    /// 200 OK → Request succeeded, returns data.
+    res.status(200).json({
+      success: true,
+      message: "Password updated succesfully",
+    });
+  } catch (err) {
+    console.log("Error : ", err);
     /// 500 Internal Server Error → Something broke on the server.
     res.status(500).json({ success: false, error: "Internal server error" });
   }
@@ -222,6 +258,96 @@ const deleteBackend = async (req, res) => {
   }
 };
 
+/// Update student record
+const updateBackendUsingJWT = async (req, res) => {
+  /// Fetching backend id from JWT token
+  const backendId = req.user.id;
+
+  /// Checking backendId is available or not in request parameter
+  if (!backendId)
+    /// 400 Bad Request → Invalid request (missing fields, wrong format).
+    return res.status(400).json({
+      success: false,
+      error: "Please provide backend id or valid backend id",
+    });
+
+  /// Fetching backend data from request parameter
+  const backendUpdatedData = req.body;
+
+  if (req.file) {
+    /// Using multer image upload in file
+    backendUpdatedData.image = req.file ? req.file.path : null;
+  }
+
+  try {
+    /// Firing query to update backend by id
+    const [result] = await BackEnd.update(backendUpdatedData, {
+      where: { id: backendId },
+    });
+
+    /// Checking backend data is available or not
+    if (result === 0) {
+      /// 404 Not Found → Resource not found.
+      return res.status(404).json({
+        success: false,
+        error: "Data not found!",
+      });
+    }
+
+    /// 200 OK → Request succeeded
+    res
+      .status(200)
+      .json({ success: true, message: "Backend data updated successfully" });
+  } catch (err) {
+    console.log("Error", err);
+    /// 400 Bad Request → Invalid request (missing fields, wrong format).
+    if (err.code === "ER_BAD_FIELD_ERROR") {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid field in request body",
+      });
+    }
+    /// 500 Internal Server Error → Something broke on the server.
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
+/// Delete Backend record
+const deleteBackendWithJWT = async (req, res) => {
+  try {
+    /// Fetching backend id from JWT token
+    const backendId = req.user.id;
+
+    /// Checking backend id is available or not in request parameter
+    if (!backendId)
+      /// 400 Bad Request → Invalid request (missing fields, wrong format).
+      return res.status(400).json({
+        success: false,
+        error: "Please provide backend id or valid backend id",
+      });
+
+    /// Firing query to delete backend by id
+    const result = await BackEnd.destroy({ where: { id: backendId } });
+
+    if (result === 0) {
+      /// 404 Not Found → Resource not found.
+      return res.status(404).json({
+        success: false,
+        error: "Data not found or already deleted",
+      });
+    }
+
+    /// 200 OK → Request succeeded
+    res
+      .status(200)
+      .json({ success: true, message: "Backend data deleted successfully" });
+  } catch (err) {
+    console.log("Error", err);
+    /// 500 Internal Server Error → Something broke on the server.
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
 module.exports = {
   createBackend,
   getBackend,
@@ -229,4 +355,7 @@ module.exports = {
   updateBackend,
   deleteBackend,
   signInWithJWT,
+  updateBackendUsingJWT,
+  deleteBackendWithJWT,
+  changePassword,
 };

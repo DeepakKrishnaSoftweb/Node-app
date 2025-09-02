@@ -17,7 +17,7 @@ const errorHandler = require("../middlewares/errorHandlerMiddleware");
 const {
   jwtMiddleware,
   generateJwtToken,
-} = require("../middlewares/employeeJwtMiddleware");
+} = require("../middlewares/jwtMiddleware");
 
 // Register error handler
 router.use(errorHandler);
